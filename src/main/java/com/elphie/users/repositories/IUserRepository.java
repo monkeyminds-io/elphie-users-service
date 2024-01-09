@@ -1,9 +1,10 @@
 package com.elphie.users.repositories;
 
 // =============================================================================
-// File Name: reposoitory/UserRepository.java
+// File Name: reposoitories/UserRepository.java
 // File Description:
-// This file contains the code of the UserRepository Interface
+// This file contains the code of the UserRepository Interface that
+// handles the queries to the users table in the DB
 // =============================================================================
 
 // =============================================================================
@@ -20,7 +21,7 @@ import com.elphie.users.models.User;
 // Interface
 // =============================================================================
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface IUserRepository extends JpaRepository<User, Long> {
     
     // Query find User by Email
     Optional<User> findByEmail(String email);

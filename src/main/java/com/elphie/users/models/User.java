@@ -7,14 +7,14 @@ package com.elphie.users.models;
 // =============================================================================
 
 // =============================================================================
-// IMPORTS
+// Entity Imports
 // =============================================================================
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import jakarta.persistence.*;
 
 // =============================================================================
-// CLASS DECLARATION
+// Entity Class
 // =============================================================================
 @Entity
 @Table(name = "users")
@@ -25,11 +25,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "firstname")
-    private String firstname;
+    @Column(name = "first_name")
+    private String first_name;
 
-    @Column(name = "lastname")
-    private String lastname;
+    @Column(name = "last_name")
+    private String last_name;
 
     @Column(name = "email")
     private String email;
@@ -37,38 +37,30 @@ public class User {
     @Column(name = "password")
     private String password;
 
-    @Column(name = "plan")
-    private String plan;
+    @Column(name = "account_type")
+    private String account_type;
 
-    @Column(name = "avatar_url")
-    private String avatar_url;
+    @Column(name = "avatar_path")
+    private String avatar_path;
 
-    @Column(name = "created_at")
-    private Date created_at;
+    @Column(name = "created_on")
+    private Timestamp created_on;
 
-    @Column(name = "updated_at")
-    private Date updated_at;
+    @Column(name = "updated_on")
+    private Timestamp updated_on;
 
     // DEFAULT CONSTRUCTOR ////////////////
     public User() {}
 
     // CONSTRUCTORS ////////////////
-    public User(String email, String password, String plan) {
-        super();
+    public User(String first_name, String last_name, String email, String password, String account_type) {
+        this.first_name = first_name;
+        this.last_name = last_name;
         this.email = email;
         this.password = password;
-        this.plan = plan;
+        this.account_type = account_type;
     }
-
-    public User(String firstname, String lastname, String email, String password, String plan) {
-        super();
-        this.firstname = firstname;
-        this.lastname = lastname;
-        this.email = email;
-        this.password = password;
-        this.plan = plan;
-    }
-
+    
     // GETTERS & SETTERS ////////////////
     public long getId() {
         return this.id;
@@ -78,20 +70,20 @@ public class User {
         this.id = id;
     }
 
-    public String getFirstname() {
-        return this.firstname;
+    public String getFirstName() {
+        return this.first_name;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String first_name) {
+        this.first_name = first_name;
     }
 
-    public String getLastname() {
-        return this.lastname;
+    public String getLastName() {
+        return this.last_name;
     }
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setLastName(String last_name) {
+        this.last_name = last_name;
     }
 
     public String getEmail() {
@@ -110,36 +102,36 @@ public class User {
         this.password = password;
     }
 
-    public String getPlan() {
-        return this.plan;
+    public String getAccountType() {
+        return this.account_type;
     }
 
-    public void setPlan(String plan) {
-        this.plan = plan;
+    public void setAccountType(String account_type) {
+        this.account_type = account_type;
     }
 
-    public String getAvatar_url() {
-        return this.avatar_url;
+    public String getAvatarPath() {
+        return this.avatar_path;
     }
 
-    public void setAvatar_url(String avatar_url) {
-        this.avatar_url = avatar_url;
+    public void setAvatarPath(String avatar_path) {
+        this.avatar_path = avatar_path;
     }
 
-    public Date getCreated_at() {
-        return this.created_at;
+    public Timestamp getCreatedOn() {
+        return this.created_on;
     }
 
-    public void setCreated_at(Date created_at) {
-        this.created_at = created_at;
+    public void setCreatedOn(Timestamp created_on) {
+        this.created_on = created_on;
     }
 
-    public Date getUpdated_at() {
-        return this.updated_at;
+    public Timestamp getUpdatedOn() {
+        return this.updated_on;
     }
 
-    public void setUpdated_at(Date updated_at) {
-        this.updated_at = updated_at;
+    public void setUpdatedOn(Timestamp updated_on) {
+        this.updated_on = updated_on;
     }
     
 
