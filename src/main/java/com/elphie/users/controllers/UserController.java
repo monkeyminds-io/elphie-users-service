@@ -12,6 +12,7 @@ package com.elphie.users.controllers;
 // =============================================================================
 import java.util.Map;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 // =============================================================================
 // Controller Class
@@ -49,77 +52,83 @@ public class UserController {
 
     /**
      * Used to CREATE a user and add it to the DB.
-     * Strategy: Validate data coming from FE, Try add user to DB, return User or Error.
+     * Strategy: Validate data coming from FE, Try add user to DB and Catch Errors.
      * Steps: 
-     *    1 -> Validate data from Front End
-     *       A -> Check email is a valid email using a Regular Expresion comparison 
-     *            (Check libs/Utiles.java Method validateEmail(email: String))
-     *       B -> Check that Account Type is either "elphie" or "calphie".
-     *    2 -> If data is ok then create validatedUser and set data, 
-     *         else return ERROR Response with 400 Bad Request Status
-     *    3 -> Try add to DB createdUser with validatedUser data
-     *    4 -> If adds to DB ok then return SUCCESS Response with 200 Ok status
-     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error
+     *    1 -> If validateUser has ERRORS return ERROR Response with 400 Bad Request Status with ERRORS Array
+     *    3 -> Try add User to DB
+     *    4 -> If added to DB then return SUCCESS Response with 200 Ok status with createdUser Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
      * @param user type User from Request Body
      * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
      */
     @PostMapping("/create")
-    public ResponseEntity<Object> createUser(@RequestBody User user) {
+    public ResponseEntity<Object> create(@RequestBody User user) {
 
-        // Create validatedUser instance
-        User validatedUser = new User();
-
-        // Validate FE data
-        if(Utiles.validateEmail(user.getEmail()) && 
-        user.getPassword() != null &&
-        (user.getAccountType().equals("elphie") || user.getAccountType().equals("calphie"))) {
-
-            // Populate validatedUser with FE User data
-            validatedUser.setFirstName(user.getFirstName());
-            validatedUser.setLastName(user.getLastName());
-            validatedUser.setEmail(user.getEmail());
-            validatedUser.setPassword(user.getPassword());
-            validatedUser.setAccountType(user.getAccountType());
-            validatedUser.setCreatedOn(new Timestamp(System.currentTimeMillis()));
-
-        } else {
-
-            // Return ERROR Response 400 Bad Request
-            return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), null);
+        // Get ERRORS ArrayList
+        ArrayList<String> errors = Utiles.validateUser(user);
+        
+        // Return ERROR Response 400 Bad Request
+        if(errors != null && errors.size() > 0) {
+            return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), errors);
         }
 
         try {
+            // Set User created_on Timestamp as current time.
+            user.setCreatedOn(new Timestamp(System.currentTimeMillis()));
+
             // Add user to DB
-            User createdUser = userRepository.save(validatedUser);
+            User createdUser = userRepository.save(user);
 
             // Return SUCCESS Response 200 OK
-            return Utiles.generateResponse(
-                HttpStatus.OK, "Success creating User.", createdUser);
+            return Utiles.generateResponse(HttpStatus.OK, "Success creating User.", createdUser);
 
         } catch (Exception error) {
 
             // Return ERROR Response 500 Internal Server Error
-            return Utiles.generateResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR, error.getMessage(), null);
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to add User to DB.");
         }
     }
 
     // TODO Refactor using ResponseHandler
     // Get User by ID
-    @GetMapping("/get/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    @GetMapping(value="/get", params="id")
+    public ResponseEntity<User> getUserById(@RequestParam(name="id") Long id) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
         return ResponseEntity.ok(user);
     }
 
-    // TODO Refactor using ResponseHandler
-    // Get user by Email
-    @GetMapping("/get?email={email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + " not found."));
-        return ResponseEntity.ok(user);
+    /**
+     * Used to GET a user by email from the DB.
+     * Strategy: Validate data coming from FE, Try find user in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If email is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try find User in DB
+     *    4 -> If found in DB then return SUCCESS Response with 200 Ok status with User Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param email type String from URL Params
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @GetMapping(value="/get", params="email")
+    public ResponseEntity<Object> getUserByEmail(@RequestParam(name="email") String email) {
+
+        // Validate that email is NOT NULL
+        if(email == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Email cannot be NULL.");
+
+        try {
+
+            // Find User or Throw Exception
+            User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + " not found."));
+            
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success getting User.", user); 
+
+        } catch (Exception error) {
+
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to find User to DB.");
+        }
     }
     
     
