@@ -27,6 +27,8 @@ import com.elphie.users.libs.Utiles;
 import com.elphie.users.models.User;
 import com.elphie.users.repositories.IUserRepository;
 
+import jakarta.annotation.sql.DataSourceDefinition;
+
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +37,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+// =============================================================================
+// Controller Data Types
+// =============================================================================
+@Data
+class UpdatePasswordBody {
+    private String newPassword;
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+}
 
 // =============================================================================
 // Controller Class
@@ -116,7 +129,6 @@ public class UserController {
         if(email == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Email cannot be NULL.");
 
         try {
-
             // Find User or Throw Exception
             User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + " not found."));
@@ -131,22 +143,44 @@ public class UserController {
         }
     }
     
-    
-    // TODO Refactor using ResponseHandler
-    // Update User
-    @PutMapping("update/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+    /**
+     * Used to UPDATE the password of a user by id from the DB.
+     * Strategy: Validate data coming from FE, Try update password of user in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If password is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try update password of User in DB
+     *    4 -> If updated in DB then return SUCCESS Response with 200 Ok status with User Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param id type Long from URL Params
+     * @param requestBody type UpdatePasswordBody from the request body
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @PutMapping("/update/{id}/password")
+    public ResponseEntity<Object> updateUserPassword(@PathVariable Long id, @RequestBody UpdatePasswordBody requestBody) {
         
-        user.setFirstName(userDetails.getFirstName());
-        user.setLastName(userDetails.getLastName());
-        user.setEmail(userDetails.getEmail());
-        user.setPassword(userDetails.getPassword());
-        user.setAvatarPath(userDetails.getAvatarPath());
+        // Validate new password is not null
+        if(requestBody.getNewPassword() == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), null);
+
+        try {
+            // Find User or Throw Exception
+            User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+            
+            // Set new password and updated_on data
+            user.setPassword(requestBody.getNewPassword());
+            user.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            
+            // Save user with new data
+            User updatedUser = userRepository.save(user);
+
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success updating the password.", updatedUser);
+
+        } catch (Exception error) {
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to update password to DB.");
+        }
         
-        User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(updatedUser);
     }
 
     // TODO Refactor using ResponseHandler
