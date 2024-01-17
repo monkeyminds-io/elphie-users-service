@@ -1,14 +1,15 @@
 package com.elphie.users.libs;
+
 // =============================================================================
 // File Name: libs/Utiles.java
 // File Description:
 // This file contains handy methods to help increase development.
 // =============================================================================
 
-import java.util.ArrayList;
 // =============================================================================
 // Imports
 // =============================================================================
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;

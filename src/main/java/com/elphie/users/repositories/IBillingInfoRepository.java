@@ -14,6 +14,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.elphie.users.models.BillingInfo;
+import java.util.Optional;
+
 
 // =============================================================================
 // Repository Interface
@@ -21,4 +23,5 @@ import com.elphie.users.models.BillingInfo;
 @Repository
 public interface IBillingInfoRepository extends JpaRepository<BillingInfo, Long> {
     
+    Optional<BillingInfo> findByUserId(Long user_id);
 }

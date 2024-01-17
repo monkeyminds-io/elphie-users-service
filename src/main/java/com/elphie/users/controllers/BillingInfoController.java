@@ -17,14 +17,58 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.elphie.users.exceptions.ResourceNotFoundException;
+import com.elphie.users.libs.Data;
 import com.elphie.users.libs.Utiles;
 import com.elphie.users.models.BillingInfo;
+import com.elphie.users.models.User;
 import com.elphie.users.repositories.IBillingInfoRepository;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+// =============================================================================
+// Controller Data Types
+// =============================================================================
+@Data
+class UpdateBillingBody {
+   // PROPERTIES ////////////////
+   private Long userId;
+   private String address_line_1;
+   private String address_line_2;
+   private String county;
+   private String eircode;
+   private String card_full_name;
+   private String card_number;
+   private String card_expiry;
+   private String card_cvc;
+   // GETTERS & SETTERS ////////////////
+   public void setUserId(Long userId) { this.userId = userId; }
+   public Long getUserId() { return userId; }
+   public void setAddressLine1(String address_line_1) { this.address_line_1 = address_line_1; }
+   public String getAddressLine1() { return address_line_1; }
+   public void setAddressLine2(String address_line_2) { this.address_line_2 = address_line_2; }
+   public String getAddressLine2() { return address_line_2; }
+   public void setCounty(String county) { this.county = county; }
+   public String getCounty() { return county; }
+   public void setEircode(String eircode) { this.eircode = eircode; }
+   public String getEircode() { return eircode; }
+   public void setCardName(String card_full_name) { this.card_full_name = card_full_name; }
+   public String getCardName() { return card_full_name; }
+   public void setCardNumber(String card_number) { this.card_number = card_number; }
+   public String getCardNumber() { return card_number; }
+   public void setCardExpiry(String card_expiry) { this.card_expiry = card_expiry; }
+   public String getCardExpiry() { return card_expiry; }
+   public void setCardCVC(String card_cvc) { this.card_cvc = card_cvc; }
+   public String getCardCVC() { return card_cvc; }
+}
 
 // =============================================================================
 // Controller Class
@@ -83,6 +127,122 @@ public class BillingInfoController {
             // Return ERROR Response 500 Internal Server Error
             return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR, error.getMessage(), "Failed to add Billing Info to DB.");
          }
+    }
+
+    /**
+     * Used to GET a billing by user ID from the DB.
+     * Strategy: Validate data coming from FE, Try find billing in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If user ID is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try find billing in DB
+     *    4 -> If found in DB then return SUCCESS Response with 200 Ok status with Billing Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param userId type String from URL Params
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @GetMapping(value="/get", params="userId")
+    public ResponseEntity<Object> getUserByEmail(@RequestParam(name="userId") String userId) {
+
+        // Validate that email is NOT NULL
+        if(userId == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "User ID cannot be NULL.");
+
+        try {
+            // Find User or Throw Exception
+            BillingInfo billingInfo = billingInfoRepository.findByUserId(Long.parseLong(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Billing with user ID " + userId + " not found."));
+            
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success getting Billing.", billingInfo); 
+
+        } catch (Exception error) {
+
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to find User to DB.");
+        }
+    }
+
+    /**
+     * Used to UPDATE the billing by id from the DB.
+     * Strategy: Validate data coming from FE, Try update password of user in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If Request Body is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try update Billing in DB
+     *    4 -> If updated in DB then return SUCCESS Response with 200 Ok status with Billing Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param id type Long from URL Params
+     * @param requestBody type UpdatePasswordBody from the request body
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @PutMapping("/{id}/update")
+    public ResponseEntity<Object> update(@PathVariable Long id, @RequestBody UpdateBillingBody updateBillingBody) {
+        
+        // Validate new password is not null
+        if(updateBillingBody == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Request Body cannot be NULL.");
+
+        try {
+            // Find billing or Throw Exception
+            BillingInfo billingInfo = billingInfoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Billing Info with id " + id + " not found."));
+            
+            // Set new data
+            if(updateBillingBody.getAddressLine1() != null) billingInfo.setAddressLine1(updateBillingBody.getAddressLine1());
+            if(updateBillingBody.getAddressLine2() != null) billingInfo.setAddressLine2(updateBillingBody.getAddressLine2());
+            if(updateBillingBody.getCounty() != null) billingInfo.setCounty(updateBillingBody.getCounty());
+            if(updateBillingBody.getEircode() != null) billingInfo.setEircode(updateBillingBody.getEircode());
+            if(updateBillingBody.getCardName() != null) billingInfo.setCardName(updateBillingBody.getCardName());
+            if(updateBillingBody.getCardNumber() != null) billingInfo.setCardNumber(updateBillingBody.getCardNumber());
+            if(updateBillingBody.getCardExpiry() != null) billingInfo.setCardExpiry(updateBillingBody.getCardExpiry());
+            if(updateBillingBody.getCardCVC() != null) billingInfo.setCardCVC(updateBillingBody.getCardCVC());
+            
+
+            // Set new updated_on date
+            billingInfo.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            
+            // Save user with new data
+            BillingInfo updatedBillingInfo = billingInfoRepository.save(billingInfo);
+
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success updating the Billing Info.", updatedBillingInfo);
+
+        } catch (Exception error) {
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to update Billing Info in DB.");
+        }
+        
+    }
+
+    /**
+     * Used to DELETE the billing by id from the DB.
+     * Strategy: Validate data coming from FE, Try delete billing in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If billingId is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try delete billing in DB
+     *    4 -> If delete from DB then return SUCCESS Response with 200 Ok status with message
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param id type Long from URL Params
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<Object> delete(@PathVariable Long id) {
+
+        // Validate new password is not null
+        if(id == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Billing ID cannot be NULL.");
+
+        try {
+            // Find billing or Throw Exception
+            BillingInfo billingInfo = billingInfoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Billing Info with id " + id + " not found."));
+        
+            // Delete user
+            billingInfoRepository.delete(billingInfo);
+
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success deleting the Billing Info.", null);
+
+        } catch (Exception error) {
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to delete Billing Info from DB.");
+        }
     }
     
 }

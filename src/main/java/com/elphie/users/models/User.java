@@ -23,7 +23,7 @@ public class User {
     // PROPERTIES ////////////////
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name = "first_name")
     private String first_name;
@@ -31,17 +31,14 @@ public class User {
     @Column(name = "last_name")
     private String last_name;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "account_type")
+    @Column(name = "account_type", nullable = false)
     private String account_type;
-
-    @Column(name = "avatar_path")
-    private String avatar_path;
 
     @Column(name = "created_on")
     private Timestamp created_on;
@@ -62,11 +59,11 @@ public class User {
     }
     
     // GETTERS & SETTERS ////////////////
-    public long getId() {
+    public Long getId() {
         return this.id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -108,14 +105,6 @@ public class User {
 
     public void setAccountType(String account_type) {
         this.account_type = account_type;
-    }
-
-    public String getAvatarPath() {
-        return this.avatar_path;
-    }
-
-    public void setAvatarPath(String avatar_path) {
-        this.avatar_path = avatar_path;
     }
 
     public Timestamp getCreatedOn() {

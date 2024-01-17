@@ -23,11 +23,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.elphie.users.exceptions.ResourceNotFoundException;
+import com.elphie.users.libs.Data;
 import com.elphie.users.libs.Utiles;
 import com.elphie.users.models.User;
 import com.elphie.users.repositories.IUserRepository;
-
-import jakarta.annotation.sql.DataSourceDefinition;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,17 +41,34 @@ import org.springframework.web.bind.annotation.RequestParam;
 // =============================================================================
 @Data
 class UpdatePasswordBody {
+    // Properties
     private String newPassword;
+    // Getters
+    public String getNewPassword() { return newPassword; }
+}
 
-    public String getNewPassword() {
-        return newPassword;
-    }
+@Data
+class UpdateUserBody {
+    // Properties
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String password;
+    private byte[] profileImage;
+    private String accountType;
+    // Getters
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
+    public String getAccountType() { return accountType; }
+    public byte[] getProfileImage() { return profileImage; }
 }
 
 // =============================================================================
 // Controller Class
 // =============================================================================
-@CrossOrigin(origins = "http://localhost:9000")
+@CrossOrigin(origins = "http://localhost:8000")
 @RestController
 @RequestMapping("/users/")
 public class UserController {
@@ -102,13 +118,35 @@ public class UserController {
         }
     }
 
-    // TODO Refactor using ResponseHandler
-    // Get User by ID
+    /**
+     * Used to GET a user by ID from the DB.
+     * Strategy: Validate data coming from FE, Try find user in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If id is NULL return ERROR Response with 400 Bad Request Status with Message
+     *    3 -> Try find User in DB
+     *    4 -> If found in DB then return SUCCESS Response with 200 Ok status with User Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param id type Long from Request Params
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
     @GetMapping(value="/get", params="id")
-    public ResponseEntity<User> getUserById(@RequestParam(name="id") Long id) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
-        return ResponseEntity.ok(user);
+    public ResponseEntity<Object> getUserById(@RequestParam(name="id") String id) {
+        // Validate that email is NOT NULL
+        if(id == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Id cannot be NULL.");
+
+        try {
+            // Find User or Throw Exception
+            User user = userRepository.findById(Long.parseLong(id))
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+            
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success getting User.", user); 
+
+        } catch (Exception error) {
+
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to find User to DB.");
+        }
     }
 
     /**
@@ -155,11 +193,11 @@ public class UserController {
      * @param requestBody type UpdatePasswordBody from the request body
      * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
      */
-    @PutMapping("/update/{id}/password")
-    public ResponseEntity<Object> updateUserPassword(@PathVariable Long id, @RequestBody UpdatePasswordBody requestBody) {
+    @PutMapping("/{id}/update/password")
+    public ResponseEntity<Object> updateUserPassword(@PathVariable Long id, @RequestBody UpdatePasswordBody updatePasswordBody) {
         
         // Validate new password is not null
-        if(requestBody.getNewPassword() == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), null);
+        if(updatePasswordBody.getNewPassword() == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Request Body cannot be NULL.");
 
         try {
             // Find User or Throw Exception
@@ -167,7 +205,7 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
             
             // Set new password and updated_on data
-            user.setPassword(requestBody.getNewPassword());
+            user.setPassword(updatePasswordBody.getNewPassword());
             user.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
             
             // Save user with new data
@@ -183,16 +221,83 @@ public class UserController {
         
     }
 
-    // TODO Refactor using ResponseHandler
-    // Delete User
-    @DeleteMapping("delete/{id}")
-    public ResponseEntity<Map<String, Boolean>> deleteUser(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+    /**
+     * Used to UPDATE the user by id from the DB.
+     * Strategy: Validate data coming from FE, Try update user in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If Request Body is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try update User in DB
+     *    4 -> If updated in DB then return SUCCESS Response with 200 Ok status with User Object
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param id type Long from URL Params
+     * @param updateUserBody type UpdateUserBody from the request body
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @PutMapping("/{id}/update")
+    public ResponseEntity<Object> update(@PathVariable Long id, @RequestBody UpdateUserBody updateUserBody) {
         
-        userRepository.delete(user);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("deleted", Boolean.TRUE);
-        return ResponseEntity.ok(response);
+        // Validate new password is not null
+        if(updateUserBody == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Request Body cannot be NULL.");
+
+        try {
+            // Find User or Throw Exception
+            User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+            
+            // Set new data
+            if(updateUserBody.getFirstName() != null) user.setFirstName(updateUserBody.getFirstName());
+            if(updateUserBody.getLastName() != null)user.setLastName(updateUserBody.getLastName());
+            if(updateUserBody.getEmail() != null)user.setEmail(updateUserBody.getEmail());
+            if(updateUserBody.getPassword() != null)user.setPassword(updateUserBody.getPassword());
+            if(updateUserBody.getAccountType() != null)user.setAccountType(updateUserBody.getAccountType());
+
+            // Set new updated_on date
+            user.setUpdatedOn(new Timestamp(System.currentTimeMillis()));
+            
+            // Save user with new data
+            User updatedUser = userRepository.save(user);
+
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success updating the User.", updatedUser);
+
+        } catch (Exception error) {
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to update User in DB.");
+        }
+        
+    }
+
+    /**
+     * Used to DELETE the user by id from the DB.
+     * Strategy: Validate data coming from FE, Try delete user in DB and Catch Errors.
+     * Steps: 
+     *    1 -> If userId is NULL return ERROR Response with 400 Bad Request Status with message
+     *    3 -> Try delete User in DB
+     *    4 -> If delete from DB then return SUCCESS Response with 200 Ok status with message
+     *    5 -> Catch Server side errors -> If any then return ERRO Response with 500 Internal Server Error with Message.
+     * @param id type Long from URL Params
+     * @return ResponseEntity<Object> -> either SUCCESS Response 200 ok | ERROR Response 400 Bad Request | ERROR 500 Internal Server Error
+     */
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<Object> delete(@PathVariable Long id) {
+
+        // Validate new password is not null
+        if(id == null) return Utiles.generateResponse(HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase(), "User ID cannot be NULL.");
+
+        try {
+            // Find User or Throw Exception
+            User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+        
+            // Delete user
+            userRepository.delete(user);
+
+            // Return SUCCESS Response 200 OK
+            return Utiles.generateResponse(HttpStatus.OK, "Success deleting the User.", null);
+
+        } catch (Exception error) {
+            // Return ERROR Response 500 Internal Server Error
+            return Utiles.generateResponse(HttpStatus.INTERNAL_SERVER_ERROR,  error.getMessage(), "Failed to delete User from DB.");
+        }
     }
 }

@@ -1,8 +1,5 @@
 package com.elphie.users.models;
 
-import java.sql.Date;
-import java.sql.Timestamp;
-
 // =============================================================================
 // File Name: models/BillingInfo.java
 // File Description:
@@ -15,6 +12,7 @@ import java.sql.Timestamp;
 // =============================================================================
 import jakarta.persistence.*;
 
+import java.sql.Timestamp;
 // =============================================================================
 // Entity Class
 // =============================================================================
@@ -28,7 +26,7 @@ public class BillingInfo {
     private long id;
     
     @Column(name = "user_id")
-    private Long user_id;
+    private Long userId;
 
     @Column(name = "address_line_1")
     private String address_line_1;
@@ -66,7 +64,7 @@ public class BillingInfo {
     // CONSTRUCTORS ////////////////
 
     public BillingInfo(long user_id, String address_line_1, String address_line_2, String county, String eircode, String card_full_name, String card_number, String card_expiry, String card_cvc) {
-        this.user_id = user_id;
+        this.userId = user_id;
         this.address_line_1 = address_line_1;
         this.address_line_2 = address_line_2;
         this.county = county;
@@ -88,11 +86,11 @@ public class BillingInfo {
     }
 
     public Long getUserId() {
-        return this.user_id;
+        return this.userId;
     }
 
     public void setUserId(long user_id) {
-        this.user_id = user_id;
+        this.userId = user_id;
     }
 
     public String getAddressLine1() {
@@ -171,7 +169,7 @@ public class BillingInfo {
         return this.updated_on;
     }
 
-    public void setUpdated_on(Timestamp updated_on) {
+    public void setUpdatedOn(Timestamp updated_on) {
         this.updated_on = updated_on;
     }
 
