@@ -28,7 +28,6 @@ import com.elphie.users.exceptions.ResourceNotFoundException;
 import com.elphie.users.libs.Data;
 import com.elphie.users.libs.Utiles;
 import com.elphie.users.models.BillingInfo;
-import com.elphie.users.models.User;
 import com.elphie.users.repositories.IBillingInfoRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -73,7 +72,7 @@ class UpdateBillingBody {
 // =============================================================================
 // Controller Class
 // =============================================================================
-@CrossOrigin(origins = "http://localhost:9000")
+@CrossOrigin(origins = "http://localhost:8000")
 @RestController
 @RequestMapping("/users/billing/")
 public class BillingInfoController {
@@ -84,6 +83,8 @@ public class BillingInfoController {
 
     // HTTP REQUEST METHODS ////////////////
 
+    // TODO Check all comments
+    
     /**
      * Used to CREATE a billing info and add it to the DB.
      * Strategy: Validate data coming from FE, Try add billing info to DB, return Billing Infpo or Error.
