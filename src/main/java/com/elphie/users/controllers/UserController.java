@@ -10,10 +10,8 @@ package com.elphie.users.controllers;
 // =============================================================================
 // Controller Imports
 // =============================================================================
-import java.util.Map;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,8 +20,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.elphie.users.definitions.UpdatePasswordBody;
+import com.elphie.users.definitions.UpdateUserBody;
 import com.elphie.users.exceptions.ResourceNotFoundException;
-import com.elphie.users.libs.Data;
 import com.elphie.users.libs.Utiles;
 import com.elphie.users.models.User;
 import com.elphie.users.repositories.IUserRepository;
@@ -35,35 +34,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-// =============================================================================
-// Controller Data Types
-// =============================================================================
-@Data
-class UpdatePasswordBody {
-    // Properties
-    private String newPassword;
-    // Getters
-    public String getNewPassword() { return newPassword; }
-}
-
-@Data
-class UpdateUserBody {
-    // Properties
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
-    private byte[] profileImage;
-    private String accountType;
-    // Getters
-    public String getFirstName() { return firstName; }
-    public String getLastName() { return lastName; }
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
-    public String getAccountType() { return accountType; }
-    public byte[] getProfileImage() { return profileImage; }
-}
 
 // =============================================================================
 // Controller Class
